@@ -4,20 +4,35 @@
 #define ARM 0
 #define CLAW 1
 
+//Sensor PORTS
+#define REFLECTANCE 0
+
 //Basic ARM movements
 #define ARM_DOWN 980
 #define ARM_UP 100
 
 //Basic CLAW movements
-#define CLAW_OPEN 1320
-#define CLAW_CLOSE_POMS 2047
-#define CLAW_CLOSE_CUBE 1900
+#define CLAW_OPEN 100
+#define CLAW_CLOSE_POMS 1115
+#define CLAW_CLOSE_CUBE 844 //1900
 #define CLAW_CLOSE_AMBULANCE 1900 //Change this 
 
 //More specific ARM movements
 
 //More specific CLAW movements
-#define CLAW_OPEN_TOP 1650
+#define CLAW_OPEN_TOP 600 
+
+//Thresholds
+#define THRESHOLD 1200
+
+
+//////////////////////////////////////////////////Basic Functions//////////////////////////////////////////////////////
+void setup(){
+    set_servo_position(ARM, ARM_UP);
+    set_servo_position(CLAW, CLAW_CLOSE_POMS);
+    enable_servo(CLAW);
+    enable_servo(ARM);
+}
 
 void drive(int speed, int time) {
   create_drive_direct(-speed, -speed);
@@ -41,52 +56,122 @@ void stop() {
   create_drive_direct(0, 0);
 }
 
+void interpolate(int srv, int pos, int step_size)
+{
+  int cur_pos = get_servo_position(srv);
+  int delta_remain = abs(pos - cur_pos);  
+  int direction = pos > cur_pos ? 1 : -1;
+
+  while(delta_remain >= 5)
+  {
+    //Make the final step fit so that the servo goes to its desired position
+    if(delta_remain < step_size)
+      step_size = delta_remain;
+
+    set_servo_position(srv, cur_pos + direction * step_size);
+    msleep(50);
+
+    //Update the necessary variable
+    cur_pos = get_servo_position(srv);
+    delta_remain = abs(pos - cur_pos);
+  }
+}
+
 void grab_poms(){
-    set_servo_position(ARM, ARM_DOWN);
-    msleep(3000);
-    set_servo_position(CLAW, CLAW_OPEN);
-    msleep(3000);
-    drive(200, 700);
+     set_servo_position(CLAW, CLAW_OPEN);
+    msleep(200);
+    interpolate(ARM, ARM_DOWN, 20);
+    msleep(500);
     set_servo_position(CLAW, CLAW_CLOSE_POMS);
-    msleep(2000);
-    set_servo_position(ARM, ARM_UP);
-    turn_right(500,1000); //Estimates 
-    msleep(1000); 
-    drive(200, 5000);
-    msleep(1000); 
-    //ADD LINE HERE THAT LOWERS ARM 
-    //MSLEEP OF PREVIOUS LINE 
-    set_servo_position(CLAW, CLAW_OPEN); 
-    msleep(3000); 
+    msleep(600);
+    interpolate(ARM, ARM_UP, 20);
+    msleep(700); 
 }
 
 void grab_cube(){
-    //TURN 180 to move away from medical center 
-    //sleep for previous line 
-    set_servo_position(ARM, ARM_DOWN);
-    msleep(3000);
     set_servo_position(CLAW, CLAW_OPEN);
-    msleep(3000);
-    drive(200, 2000);
-    turn_right(500,1000); 
-    msleep(100); 
-    drive(100, 500); 
-    msleep(100); 
+    msleep(200);
+    interpolate(ARM, ARM_DOWN, 20);
+    msleep(500);
     set_servo_position(CLAW, CLAW_CLOSE_CUBE);
-    msleep(2000);
-    set_servo_position(ARM, ARM_UP);
+    msleep(500);
+    interpolate(ARM, ARM_UP, 20);
     msleep(400); 
-    drive(-200, 2000); //back up more and then turning  
-    msleep(500); 
-    turn_right(200, 1000); 
-    msleep(500); 
-    drive(400, 3500); 
-    msleep(500); 
-    set_servo_position(ARM, ARM_DOWN); 
-    msleep(100); 
-    set_servo_position(CLAW, CLAW_OPEN); 
-    msleep(100); //Drops the cube into the burning zone 
-    drive(100, 1000); //Push in a little bit to make sure the cube is in the zone... CHANGE LATER, SHOULD BE ON TOP 
+}
+
+////////////////////////////////////////////////Sensor Functions////////////////////////////////////////////////////////
+int getSign(int n, int tolerance){
+    if(n > tolerance){
+        return 1;
+    }
+    else if(n < -tolerance){
+        return -1;
+    }
+    return 0;
+}
+
+void driveToLine(int power, int adjustPower){
+    int leftSign = getSign(THRESHOLD - get_create_lcliff_amt(),0);
+    int rightSign = getSign(THRESHOLD - get_create_rcliff_amt(),0);
+    while(!(leftSign == 1 && rightSign == 1)){
+        create_drive_direct(leftSign * -power, rightSign * -power);
+        msleep(1);
+        leftSign = getSign(THRESHOLD - get_create_lcliff_amt(),0);
+        rightSign = getSign(THRESHOLD - get_create_rcliff_amt(),0);
+        if(leftSign == 1){
+            power = adjustPower;
+        }
+    }
+    stop();
+}
+
+inline int over_black()
+{
+  //printf("REFLECTANCE: %d %d\n", analog(REFLECTANCE), analog(REFLECTANCE) > THRESHOLD);
+  return analog(REFLECTANCE) > 1000;
+}
+
+void line_follow(int time) {
+  int t = 0, interval = 10;
+  while(t * interval < time){
+    if(!over_black()) {
+      create_drive_direct(-150, -90);
+    }
+    else {
+      create_drive_direct(-90, -150);
+    }
+    msleep(interval);
+    t++;
+  }
+  stop();
+}
+
+/////////////////////////////////////////////Code Path//////////////////////////////////////////////////////////////////
+void grab_cube_sequence(){ 
+    turn_left(250, 170);
+    msleep(2000);
+    grab_cube();
+    turn_left(250, 410);
+}
+
+void middle(){
+    //interpolate(ARM, ARM_DOWN - 150, 30);
+    driveToLine(-150, -20);
+    create_drive_direct(-350, -100);
+    msleep(1500); //1300 for camera view
+    msleep(200);
+}
+
+void cube_dump(){
+    line_follow(2100);
+    drive(100, 200);
+    turn_left(100, 150);
+    msleep(1700);
+    set_servo_position(ARM, ARM_UP + 150);
+    msleep(200);
+    set_servo_position(CLAW, CLAW_OPEN_TOP);
+    msleep(300);
+    set_servo_position(ARM, ARM_UP);
     msleep(100);
 }
 
@@ -113,11 +198,26 @@ void grab_ambulance(){
     msleep(100); //little push in to make sure the ambulance is in the zone 
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 int main() {
+    setup();
     create_connect();
   	create_full();
-    enable_servo(CLAW);
-    enable_servo(ARM);
-    stop();
+    msleep(1000);
+    grab_cube_sequence();
+    middle();
+    cube_dump();
+    drive(-100, 200);
+    turn_right(150, 1500);
+    drive(-150, 470); //drive back before poms
+    grab_poms();
+    turn_left(150, 1300);
+    drive(-200, 250);
+    line_follow(1300);
+    drive(100, 150);
+    turn_left(100, 150);
+    drive(100, 100);
+    set_servo_position(CLAW, CLAW_OPEN_TOP);
+    
     return 0;
 }

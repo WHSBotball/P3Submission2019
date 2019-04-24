@@ -78,12 +78,12 @@ void interpolate(int srv, int pos, int step_size)
 }
 
 void grab_poms(int timef, int timeb){
-     set_servo_position(CLAW, CLAW_OPEN);
+    set_servo_position(CLAW, CLAW_OPEN);
     msleep(200);
     interpolate(ARM, ARM_DOWN, 20);
     msleep(500);
     drive(150, timef);
-    set_servo_position(CLAW, CLAW_CLOSE_POMS);
+    interpolate(CLAW, CLAW_CLOSE_POMS, 50);
     msleep(600);
     drive(-150, timeb);
     interpolate(ARM, ARM_UP, 20);
@@ -97,7 +97,7 @@ void grab_cube(){
     msleep(500);
     set_servo_position(CLAW, CLAW_CLOSE_CUBE);
     msleep(500);
-    interpolate(ARM, ARM_DOWN - 150, 20);
+    interpolate(ARM, ARM_DOWN - 220, 20);
     msleep(400); 
 }
 
@@ -163,7 +163,7 @@ void line_follow(int time) {
 /////////////////////////////////////////////Code Path//////////////////////////////////////////////////////////////////
 void grab_cube_sequence(){ 
     turn_left(250, 170);
-    msleep(900);
+    msleep(250);
     grab_cube();
     turn_left(250, 400);
 }
@@ -172,19 +172,20 @@ void middle(){
     //interpolate(ARM, ARM_DOWN - 150, 30);
     driveToLine(-120, -15);
   	create_drive_direct(-400, -100);
-   	msleep(1250); //1300 for camera view
-    msleep(300);
-    drive(-200, 800);
+   	msleep(1500); //1300 for camera view
+    stop();
+    msleep(600);
+    drive(-200, 870);
     turn_left(120, 600);
     turn_right(120, 600);
 }
 
 void cube_dump(){
-    line_follow(3350);
+    line_follow(3100);
     //drive(100, 200);
     turn_left(100, 300); //TURN LEFT 
     msleep(400);
-    drive(100,1100); 
+    drive(100,1300); 
     set_servo_position(CLAW, CLAW_OPEN_TOP);
     msleep(300);
     turn_right(50,100); //IF DOESNT WORK CHANGE THIS  
@@ -197,7 +198,7 @@ void cube_dump(){
 void poms_dump(){
     turn_left(120, 175);
     drive(200, 550);
-    turn_left(160, 1220);
+    turn_left(160, 1150); //TURN THAT WAS JUST CHANGED 
     drive(100, 200);
     set_servo_position(ARM, ARM_UP + 120);
     msleep(200);
@@ -238,12 +239,13 @@ int main() {
     
      
     grab_cube_sequence();
+    
     //start sweeping
-    drive(200,875); 
+    drive(200,900); 
     msleep(100); //weeeeeee 
     turn_left(120,2000);
     msleep(100); 
-    turn_right(120,2000);
+    turn_right(120,1900);
     msleep(100); 
     back_until_bump(); 
     msleep(100); 
@@ -252,7 +254,7 @@ int main() {
     cube_dump();
     
     drive(-100, 200);
-    turn_right(150, 1600); //CHANGED THIS FOR THE TURN TO GRAB THE BLUE POMS 
+    turn_right(150, 1500); //CHANGED THIS FOR THE TURN TO GRAB THE BLUE POMS 
     drive(-150, 600); //drive back before poms
     
     grab_poms(450, 400);
@@ -260,19 +262,56 @@ int main() {
     
     set_servo_position(CLAW, CLAW_OPEN);
     msleep(200);
-    turn_left(120, 1110);
+    turn_left(120, 1010);
     interpolate(ARM, ARM_DOWN - 140, 30);
     drive(200, 1200);
-    set_servo_position(CLAW, CLAW_CLOSE_CUBE);
-    msleep(400); 
-    drive(-200, 1600);
+    
+    create_drive_direct(-90, 0);
+    msleep(350);
+    stop();
+    
+    msleep(200);
+    interpolate(CLAW, CLAW_CLOSE_CUBE, 30);
+    msleep(400);
+    
+    create_drive_direct(90, 0);
+    msleep(350);
+    stop();
+    
+    drive(-200, 1800);
   	msleep(100);
-    turn_right(120, 1000); 
+    turn_right(120, 920);
+    drive(200, 200);
     msleep(1000);
     set_servo_position(CLAW, CLAW_OPEN_TOP); 
-     
-    
-    
+    msleep(500);
+    drive(-200, 800);
+    interpolate(ARM, ARM_UP, 30); 
+    msleep(100); 
+    turn_left(120, 1600);
+    drive(200, 200);
+    turn_left(120, 1300);
+    interpolate(ARM, ARM_DOWN-400, 30); 
+    msleep(100); 
+    line_follow(9000); //line following
+    msleep(100); 
+    turn_left(120, 1200); 
+    msleep(100); 
+    //drive(50,100); //driving off the line
+    //msleep(100); 
+    turn_left(120,1200); //making the turn less violent 
+    msleep(100); 
+    drive(-100, 250); 
+    msleep(100); 
+    turn_left(120,1200); 
+    msleep(100); 
+   	set_servo_position(CLAW, CLAW_OPEN); 
+    drive(100, 8500); //push 
+    msleep(100); 
+    turn_left(200, 600); //turn  a little 
+    msleep(100); 
+ 	drive(100, 1000); //push into the medical box 
+    msleep(100); 
     
     return 0;
 }

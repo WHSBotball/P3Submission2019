@@ -97,7 +97,7 @@ void grab_cube(){
     msleep(500);
     set_servo_position(CLAW, CLAW_CLOSE_CUBE);
     msleep(500);
-    interpolate(ARM, ARM_UP, 20);
+    interpolate(ARM, ARM_DOWN - 150, 20);
     msleep(400); 
 }
 
@@ -163,7 +163,7 @@ void line_follow(int time) {
 /////////////////////////////////////////////Code Path//////////////////////////////////////////////////////////////////
 void grab_cube_sequence(){ 
     turn_left(250, 170);
-    msleep(2000);
+    msleep(900);
     grab_cube();
     turn_left(250, 400);
 }
@@ -173,25 +173,37 @@ void middle(){
     driveToLine(-120, -15);
   	create_drive_direct(-400, -100);
    	msleep(1250); //1300 for camera view
-    msleep(200);
-    drive(-200, 1000);
+    msleep(300);
+    drive(-200, 800);
     turn_left(120, 600);
     turn_right(120, 600);
 }
 
 void cube_dump(){
-    line_follow(3200);
+    line_follow(3350);
     //drive(100, 200);
     turn_left(100, 300); //TURN LEFT 
     msleep(400);
-    drive(100,1200); 
+    drive(100,1100); 
     set_servo_position(CLAW, CLAW_OPEN_TOP);
     msleep(300);
     turn_right(50,100); //IF DOESNT WORK CHANGE THIS  
     msleep(20); 
     interpolate(ARM, ARM_UP, 30);
     msleep(100);
-    drive(-100,600); 
+    drive(-100,660); 
+}
+
+void poms_dump(){
+    turn_left(120, 175);
+    drive(200, 550);
+    turn_left(160, 1220);
+    drive(100, 200);
+    set_servo_position(ARM, ARM_UP + 120);
+    msleep(200);
+    interpolate(CLAW, CLAW_OPEN_TOP, 20);
+    msleep(100);
+    set_servo_position(ARM, ARM_UP);
 }
 
 void grab_ambulance(){
@@ -224,46 +236,45 @@ int main() {
   	create_full();
     msleep(1000);
     
-    /*printf("right%d\n", get_create_lcliff_amt());
-    printf("left%d\n", get_create_rcliff_amt());
-    
-    return 0;
-    */
      
     grab_cube_sequence();
     //start sweeping
     drive(200,875); 
-    msleep(100); //weeeeeee
-    interpolate(ARM, ARM_DOWN, 30); 
+    msleep(100); //weeeeeee 
     turn_left(120,2000);
     msleep(100); 
     turn_right(120,2000);
     msleep(100); 
-  //  drive(-220, 875);
-    back_until_bump();
-	interpolate(ARM, ARM_DOWN - 150, 20); 
+    back_until_bump(); 
     msleep(100); 
+    turn_left(120, 100);
     middle();
     cube_dump();
     
     drive(-100, 200);
-    turn_right(150, 1720); //CHANGED THIS FOR THE TURN TO GRAB THE BLUE POMS 
+    turn_right(150, 1600); //CHANGED THIS FOR THE TURN TO GRAB THE BLUE POMS 
     drive(-150, 600); //drive back before poms
     
     grab_poms(450, 400);
-    turn_left(120, 175);
-    drive(200, 550);
-    turn_left(160, 1200);
-    drive(120, 450);
-    /*
-    line_follow(1300);
-    drive(100, 150);
-    turn_left(100, 150);
-    drive(100, 100);
-    */
-    set_servo_position(ARM, ARM_UP + 120);
+    poms_dump();
+    
+    set_servo_position(CLAW, CLAW_OPEN);
     msleep(200);
-    interpolate(CLAW, CLAW_OPEN_TOP, 20);
+    turn_left(120, 1110);
+    interpolate(ARM, ARM_DOWN - 140, 30);
+    drive(200, 1200);
+    set_servo_position(CLAW, CLAW_CLOSE_CUBE);
+    msleep(400); 
+    drive(-200, 1600);
+  	msleep(100);
+    turn_right(120, 1000); 
+    msleep(1000);
+    set_servo_position(CLAW, CLAW_OPEN_TOP); 
+     
+    
+    
     
     return 0;
 }
+
+//120, 1600 = perfect turn

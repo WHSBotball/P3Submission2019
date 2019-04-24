@@ -23,7 +23,7 @@
 #define CLAW_OPEN_TOP 600 
 
 //Thresholds
-#define THRESHOLD 1200
+#define THRESHOLD 1350
 
 
 //////////////////////////////////////////////////Basic Functions//////////////////////////////////////////////////////
@@ -158,12 +158,12 @@ void grab_cube_sequence(){
     turn_left(250, 170);
     msleep(2000);
     grab_cube();
-    turn_left(250, 410);
+    turn_left(250, 400);
 }
 
 void middle(){
     //interpolate(ARM, ARM_DOWN - 150, 30);
-    driveToLine(-120, -20);
+    driveToLine(-100, -15);
     create_drive_direct(-350, -100);
     msleep(1500); //1300 for camera view
     msleep(200);
@@ -172,7 +172,7 @@ void middle(){
 void cube_dump(){
     line_follow(2100);
     drive(100, 200);
-    turn_left(100, 200);
+    turn_left(100, 100);
     msleep(1700);
     set_servo_position(ARM, ARM_UP + 150);
     msleep(200);
@@ -212,25 +212,34 @@ int main() {
   	create_full();
     msleep(1000);
     
+    /*printf("right%d\n", get_create_lcliff_amt());
+    printf("left%d\n", get_create_rcliff_amt());
+    
+    return 0;
+    */
     
     grab_cube_sequence();
     middle();
     cube_dump();
     
     drive(-100, 200);
-    turn_right(150, 1700);
+    turn_right(150, 1500);
     drive(-150, 600); //drive back before poms
     
-    grab_poms(450, 250);
+    grab_poms(450, 400);
     turn_left(150, 220);
-    drive(200, 350);
+    drive(200, 550);
     turn_left(150, 1400);
-    return 0;
+    drive(100, 250);
+    /*
     line_follow(1300);
     drive(100, 150);
     turn_left(100, 150);
     drive(100, 100);
-    set_servo_position(CLAW, CLAW_OPEN_TOP);
+    */
+    set_servo_position(ARM, ARM_UP + 120);
+    msleep(200);
+    interpolate(CLAW, CLAW_OPEN_TOP, 30);
     
     return 0;
 }

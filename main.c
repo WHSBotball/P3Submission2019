@@ -163,23 +163,27 @@ void grab_cube_sequence(){
 
 void middle(){
     //interpolate(ARM, ARM_DOWN - 150, 30);
-    driveToLine(-100, -15);
-    create_drive_direct(-350, -100);
+    driveToLine(-120, -15);
+    create_drive_direct(-400, -100);
     msleep(1500); //1300 for camera view
     msleep(200);
 }
 
 void cube_dump(){
-    line_follow(2100);
-    drive(100, 200);
-    turn_left(100, 100);
-    msleep(1700);
-    set_servo_position(ARM, ARM_UP + 150);
+    line_follow(1800);
+    //drive(100, 200);
+    turn_left(100, 330); //TURN LEFT 
+    msleep(400);
+    interpolate(ARM, ARM_DOWN,30);
     msleep(200);
+    drive(100,1200); 
     set_servo_position(CLAW, CLAW_OPEN_TOP);
     msleep(300);
-    set_servo_position(ARM, ARM_UP);
+    turn_right(50,100); //IF DOESNT WORK CHANGE THIS  
+    msleep(20); 
+    interpolate(ARM, ARM_UP, 30);
     msleep(100);
+    drive(-100,600); 
 }
 
 void grab_ambulance(){
@@ -217,20 +221,20 @@ int main() {
     
     return 0;
     */
-    
+     
     grab_cube_sequence();
     middle();
     cube_dump();
     
     drive(-100, 200);
-    turn_right(150, 1500);
+    turn_right(150, 1720); //CHANGED THIS FOR THE TURN TO GRAB THE BLUE POMS 
     drive(-150, 600); //drive back before poms
     
     grab_poms(450, 400);
-    turn_left(150, 220);
+    turn_left(120, 175);
     drive(200, 550);
-    turn_left(150, 1400);
-    drive(100, 250);
+    turn_left(150, 1500);
+    drive(100, 400);
     /*
     line_follow(1300);
     drive(100, 150);
@@ -239,7 +243,7 @@ int main() {
     */
     set_servo_position(ARM, ARM_UP + 120);
     msleep(200);
-    interpolate(CLAW, CLAW_OPEN_TOP, 30);
+    interpolate(CLAW, CLAW_OPEN_TOP, 20);
     
     return 0;
 }

@@ -13,7 +13,7 @@
 
 //Basic CLAW movements
 #define CLAW_OPEN 100
-#define CLAW_CLOSE_POMS 1115
+#define CLAW_CLOSE_POMS 1230
 #define CLAW_CLOSE_CUBE 844 //1900
 #define CLAW_CLOSE_AMBULANCE 1900 //Change this 
 
@@ -77,13 +77,15 @@ void interpolate(int srv, int pos, int step_size)
   }
 }
 
-void grab_poms(){
+void grab_poms(int timef, int timeb){
      set_servo_position(CLAW, CLAW_OPEN);
     msleep(200);
     interpolate(ARM, ARM_DOWN, 20);
     msleep(500);
+    drive(150, timef);
     set_servo_position(CLAW, CLAW_CLOSE_POMS);
     msleep(600);
+    drive(-150, timeb);
     interpolate(ARM, ARM_UP, 20);
     msleep(700); 
 }
@@ -113,13 +115,18 @@ int getSign(int n, int tolerance){
 void driveToLine(int power, int adjustPower){
     int leftSign = getSign(THRESHOLD - get_create_lcliff_amt(),0);
     int rightSign = getSign(THRESHOLD - get_create_rcliff_amt(),0);
+    int rpower = rightSign * -power;
+    int lpower = leftSign * -power;
     while(!(leftSign == 1 && rightSign == 1)){
-        create_drive_direct(leftSign * -power, rightSign * -power);
+        create_drive_direct(rpower, lpower);
         msleep(1);
         leftSign = getSign(THRESHOLD - get_create_lcliff_amt(),0);
         rightSign = getSign(THRESHOLD - get_create_rcliff_amt(),0);
         if(leftSign == 1){
-            power = adjustPower;
+            rpower = rightSign * -adjustPower;
+        }
+        if(rightSign == 1){
+            lpower = leftSign * -adjustPower;
         }
     }
     stop();
@@ -156,7 +163,7 @@ void grab_cube_sequence(){
 
 void middle(){
     //interpolate(ARM, ARM_DOWN - 150, 30);
-    driveToLine(-150, -20);
+    driveToLine(-120, -20);
     create_drive_direct(-350, -100);
     msleep(1500); //1300 for camera view
     msleep(200);
@@ -165,7 +172,7 @@ void middle(){
 void cube_dump(){
     line_follow(2100);
     drive(100, 200);
-    turn_left(100, 150);
+    turn_left(100, 200);
     msleep(1700);
     set_servo_position(ARM, ARM_UP + 150);
     msleep(200);
@@ -204,15 +211,21 @@ int main() {
     create_connect();
   	create_full();
     msleep(1000);
+    
+    
     grab_cube_sequence();
     middle();
     cube_dump();
+    
     drive(-100, 200);
-    turn_right(150, 1500);
-    drive(-150, 470); //drive back before poms
-    grab_poms();
-    turn_left(150, 1300);
-    drive(-200, 250);
+    turn_right(150, 1700);
+    drive(-150, 600); //drive back before poms
+    
+    grab_poms(450, 250);
+    turn_left(150, 220);
+    drive(200, 350);
+    turn_left(150, 1400);
+    return 0;
     line_follow(1300);
     drive(100, 150);
     turn_left(100, 150);
